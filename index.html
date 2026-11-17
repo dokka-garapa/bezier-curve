@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ベジェ曲線トレスゲーム</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;background:linear-gradient(#fff8e1,#ffedb8);color:#5b3a1a;padding:16px 14px 40px}
+.wrap{max-width:640px;margin:0 auto}
+header{text-align:center;margin-bottom:10px}
+h1{font-size:23px;margin:2px 0 4px;letter-spacing:.02em}
+.subtitle{font-size:13px;color:#a06a1f;margin:0}
+.best{font-size:12px;color:#a06a1f;margin-top:6px;min-height:16px}
+.progress-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#8a5a12;margin:10px 2px 6px}
+.bar{height:12px;background:#fff;border:2px solid #ffcf87;border-radius:999px;overflow:hidden;margin-bottom:12px}
+.bar>i{display:block;height:100%;width:0;background:#ffb52e;border-radius:999px;transition:width .3s}
+.mode-row{display:flex;align-items:center;gap:8px;margin:0 2px 12px;flex-wrap:wrap}
+.mode-label{font-size:13px;font-weight:800;color:#8a5a12}
+.mode-btn{flex:1;border:2px solid #ffcf87;background:#fffdf6;border-radius:999px;padding:9px 10px;font-size:15px;font-weight:900;font-family:inherit;color:#5b3a1a;cursor:pointer;white-space:nowrap}
+.mode-btn.on{background:#ffb52e;border-color:#d98e04}
+.qtitle{font-size:17px;font-weight:900;margin:0 0 2px}
+.qhint{font-size:13px;color:#8a5a12;line-height:1.6;margin:0 0 10px}
+.stage{background:#fff;border:2px solid #ffcf87;border-radius:18px;box-shadow:0 3px 0 #ffcf87;overflow:hidden;flex-shrink:0}
+.stage svg{display:block;width:100%;height:auto;touch-action:none;-webkit-user-select:none;user-select:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:#8a5a12;margin:8px 2px 0;line-height:1.5}
+.legend b.red{color:#e57373}
+.legend b.black{color:#263238}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{flex:1 1 auto;border:2px solid #ffcf87;background:#fffdf6;border-radius:12px;padding:10px 8px;font-size:14px;font-weight:800;font-family:inherit;color:#5b3a1a;cursor:pointer;white-space:nowrap}
+.btn:active{transform:translateY(2px)}
+.btn.on{background:#ffb52e;border-color:#d98e04}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.grade{width:100%;margin-top:10px;border:none;border-radius:14px;padding:15px;font-size:18px;font-weight:900;font-family:inherit;background:#ffb52e;color:#5b3a1a;box-shadow:0 4px 0 #d98e04;cursor:pointer}
+.grade:active{transform:translateY(3px);box-shadow:0 1px 0 #d98e04}
+.status{font-size:13px;color:#b03a2e;min-height:18px;margin-top:8px;text-align:center;font-weight:700}
+.result{margin-top:12px;border-radius:16px;padding:16px 14px;text-align:center;display:none}
+.result.show{display:block}
+.result.good{background:#e8f7e4;border:2px solid #7fb069}
+.result.mid{background:#fff3d6;border:2px solid #ffcf87}
+.result.low{background:#fdecea;border:2px solid #ef9a9a}
+.result .score{font-size:40px;font-weight:900;margin:0}
+.result .verdict{font-size:18px;font-weight:900;margin:2px 0 6px}
+.result .comment{font-size:13px;line-height:1.7;margin:0;text-align:left}
+.result .dist{font-size:12px;color:#8a5a12;margin-top:8px}
+.next{margin-top:12px;width:100%;border:none;border-radius:14px;padding:14px;font-size:17px;font-weight:800;font-family:inherit;background:#ffb52e;color:#5b3a1a;box-shadow:0 4px 0 #d98e04;cursor:pointer}
+.next:active{transform:translateY(3px);box-shadow:0 1px 0 #d98e04}
+.final{display:none;background:#fffdf6;border:2px solid #ffcf87;border-radius:18px;padding:20px 16px 18px;box-shadow:0 3px 0 #ffcf87;text-align:center;margin-top:12px}
+.final.show{display:block}
+.final .score{font-size:44px;font-weight:900;margin:6px 0 2px}
+.final .rank{font-size:20px;font-weight:900;color:#c47a00;margin:0 0 10px}
+.final .msg{font-size:14px;line-height:1.8;margin:0 0 6px}
+.review{text-align:left;margin-top:14px}
+.review h3{font-size:15px;margin:0 0 8px;text-align:center}
+.review-item{font-size:13px;line-height:1.6;background:#fff;border:1px solid #ffdf9e;border-radius:12px;padding:9px 11px;margin-bottom:8px}
+.restart{margin-top:12px;width:100%;border:none;border-radius:14px;padding:15px;font-size:18px;font-weight:800;font-family:inherit;background:#ffb52e;color:#5b3a1a;box-shadow:0 4px 0 #d98e04;cursor:pointer}
+.restart:active{transform:translateY(3px);box-shadow:0 1px 0 #d98e04}
+.howto{background:#fffdf6;border:2px solid #ffcf87;border-radius:16px;padding:14px 16px;margin-top:18px;font-size:13px;line-height:1.8}
+.howto h2{font-size:15px;margin:0 0 6px}
+.howto ul{margin:6px 0;padding-left:20px}
+.howto li{margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>✒️ ベジェ曲線トレスゲーム</h1>
+<p class="subtitle">薄い赤のお題の曲線を、点を置いてなぞろう</p>
+<div class="best" id="best"></div>
+</header>
+
+<div id="playArea">
+  <div class="progress-row"><span id="qnum">第1問 / 5問</span><span id="totalScore">合計 0点</span></div>
+  <div class="bar"><i id="barFill"></i></div>
+
+  <div class="mode-row">
+    <span class="mode-label">曲線の種類：</span>
+    <button class="mode-btn" id="btnModeSpline" type="button">スプライン</button>
+    <button class="mode-btn" id="btnModeQuad" type="button">2次ベジェ</button>
+  </div>
+
+  <p class="qtitle" id="qtitle"></p>
+  <p class="qhint" id="qhint"></p>
+
+  <div class="stage">
+    <svg id="stage" viewBox="0 0 720 440" xmlns="http://www.w3.org/2000/svg" aria-label="描画スペース">
+      <rect x="0" y="0" width="720" height="440" fill="#ffffff"></rect>
+      <path id="targetPath" fill="none" stroke="#f3a3a3" stroke-width="9" stroke-linecap="round" opacity="0.65"></path>
+      <g id="targetGuides"></g>
+      <path id="playerPath" fill="none" stroke="#263238" stroke-width="4" stroke-linecap="round"></path>
+      <g id="anchorDots"></g>
+    </svg>
+  </div>
+  <div class="legend">
+    <span><b class="red">━ 薄い赤</b> ＝ お題</span>
+    <span><b class="black">━ 黒</b> ＝ あなたの曲線（<span id="legendCurve">置いた点を全部通ります</span>）</span>
+    <span id="legendPts">● 白い丸 ＝ 点（数字は置いた順番）</span>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btnUndo" type="button">↩ 元に戻す</button>
+    <button class="btn" id="btnDelSel" type="button">選んだ点を消す</button>
+    <button class="btn" id="btnClear" type="button">全部消す</button>
+    <button class="btn" id="btnGuide" type="button">お手本の点を見る</button>
+  </div>
+  <button class="grade" id="btnGrade" type="button">採点する</button>
+  <div class="status" id="status"></div>
+
+  <div class="result" id="result">
+    <p class="score" id="scoreNum"></p>
+    <p class="verdict" id="verdict"></p>
+    <p class="comment" id="comment"></p>
+    <div class="dist" id="distInfo"></div>
+    <button class="next" id="btnNext" type="button">次の問題へ ▶</button>
+  </div>
+</div>
+
+<div class="final" id="final">
+  <div>🎓 結果発表</div>
+  <div class="score" id="finalScore"></div>
+  <p class="rank" id="finalRank"></p>
+  <p class="msg" id="finalMsg"></p>
+  <div class="review"><h3>振り返り</h3><div id="reviewList"></div></div>
+  <button class="restart" id="btnRestart" type="button">もう一度あそぶ</button>
+</div>
+
+<div class="howto">
+<h2>遊び方（曲線の種類が選べます）</h2>
+<ul>
+<li><b>種類の選び方</b>：上の「スプライン」「2次ベジェ」ボタンで切り替えます（選んだ種類は保存されます）。切り替えると、その問題は最初からやり直しになります。</li>
+<li><b>スプライン</b>：タップで置いた点を全部通る、なめらかな曲線です。角度の編集はありません。点を置くと、<b>2つ前の点までの形が変わります</b>（それより前の部分は変わりません）。急に曲がるところでは点の間隔を狭く、山の頂点と谷の底には必ず点を置いてください。</li>
+<li><b>2次ベジェ</b>：お題はスプラインとまったく同じ曲線です。点が交互に「通る点（白い丸）」と「コントロール点（オレンジのひし形）」になります。白い丸はスプラインとまったく同じ場所で、ひし形はそのあいだに入ります。曲線は白い丸を通り、ひし形の方向に引っぱられます（ひし形自体は通りません）。ひし形を遠くに置くほど、強く引っぱられます。</li>
+<li><b>直す</b>：どちらの種類でも、点はドラッグで移動できます。点をタップして選んで「選んだ点を消す」こともできます。</li>
+<li><b>採点</b>：お題の曲線とあなたの曲線の「平均のずれ」で採点します。最後の点がお題の終わりまで届いていないと、点数が下がります。</li>
+<li>「お手本の点を見る」を押すと、お題の点の位置と順番が薄く表示されます。最初はそれを見ながら練習するのがおすすめです。</li>
+</ul>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+function $(id){return document.getElementById(id);}
+function pt(x,y){return {x:x,y:y};}
+function round1(v){return Math.round(v*10)/10;}
+
+/* お題：スプラインの「点の並び」だけを持つ。2次ベジェのお題は同じ並びから自動で作る（同じ曲線・同じ通る点） */
+var QUESTIONS=[
+ {name:"なだらかな丘",
+  hintS:"山の頂点に必ず点を置いてください。登りと下りの途中にも点を置くと、なだらかな山になります。",
+  hintQ:"白い丸（通る点）はスプラインとまったく同じ場所です。ひし形（コントロール点）は、白い丸と白い丸のあいだに置きます。ひし形の方向に曲線が引っぱられます。",
+  pointsS:[[70,340],[200,210],[360,105],[520,210],[650,340]]},
+ {name:"S字カーブ",
+  hintS:"下がってから上がる、曲がる向きが切り替わる真ん中あたりに点を置くのが大事です。",
+  hintQ:"白い丸はスプラインとまったく同じ場所で、真ん中の白い丸が谷の底です。ひし形は、白い丸と白い丸のあいだに置いてください。",
+  pointsS:[[70,140],[190,150],[290,260],[360,295],[430,260],[530,155],[650,150]]},
+ {name:"波なみ",
+  hintS:"山と谷、1つずつに点を置くのがコツです。山・谷・山・谷と順に置いていってください。",
+  hintQ:"白い丸はスプラインとまったく同じ、山と谷の場所です。ひし形は、そのあいだに1つずつ置きます。",
+  pointsS:[[50,270],[120,180],[185,170],[255,260],[320,330],[390,260],[455,170],[525,180],[600,255],[670,270]]},
+ {name:"ジェットコースター",
+  hintS:"急な下りでは点の間隔を狭くすると、お題に沿いやすくなります。いちばん下の底にも点を置いてください。",
+  hintQ:"白い丸はスプラインとまったく同じ場所です。急な下りの区間は、前後のひし形の置き方で曲がり具合が変わります。",
+  pointsS:[[60,115],[180,125],[255,250],[300,365],[370,370],[445,260],[475,175],[560,175],[660,330]]},
+ {name:"山ふたつ",
+  hintS:"2つの山の頂点と、あいだの谷に点を置いてください。急に曲がるところは間隔を狭く。",
+  hintQ:"白い丸はスプラインとまったく同じ場所です。ひし形は白い丸のあいだに置いて、山のふくらみを作ります。",
+  pointsS:[[60,350],[140,240],[225,145],[300,250],[360,340],[450,250],[540,155],[660,330]]}
+];
+var TOTAL=QUESTIONS.length;
+
+var mode="spline";
+try{ var savedMode=localStorage.getItem("bezier_trace_mode"); if(savedMode==="quad"||savedMode==="spline")mode=savedMode; }catch(e){}
+var qIndex=0;
+var playerPts=[];
+var selected=-1;
+var undoStack=[];
+var graded=false;
+var scores=[];
+var showGuide=false;
+var dragInfo=null;
+
+function targetRaw(){
+  var raw=QUESTIONS[qIndex].pointsS;
+  if(mode==="spline")return raw;
+  return quadTargetPts(raw.map(function(p){return pt(p[0],p[1]);})).map(function(p){return [p.x,p.y];});
+}
+/* 2次ベジェのお題は、スプラインのお題から自動で作る（同じ曲線・同じ通る点）。
+   通る点はスプラインとまったく同じで、区間ごとにコントロール点を計算してはさむ。
+   コントロール点は「区間の両端の接線の交点」に置くのが基本：つなぎ目で曲線の
+   向きがそろうので、線がガタつかず滑らかになる。交点が遠くになりすぎる区間は、
+   「中点がスプラインと重なる点」に切り替える */
+function quadTargetPts(pts){
+  var segs=splineSegments(pts);
+  var out=[pts[0]];
+  segs.forEach(function(s,i){
+    out.push(quadControl(pts,i,s));
+    out.push(s.b);
+  });
+  return out;
+}
+/* スプラインと同じ接線（前後2つずつの点から決める）を、任意の点リストで計算する */
+function splineTangent(pts,j){
+  var n=pts.length;
+  var a=pts[Math.max(0,j-2)], b=pts[Math.max(0,j-1)], c=pts[Math.min(n-1,j+1)], d=pts[Math.min(n-1,j+2)];
+  return { x:(a.x-8*b.x+8*c.x-d.x)/12, y:(a.y-8*b.y+8*c.y-d.y)/12 };
+}
+function quadControl(pts,i,s){
+  var A=s.a, B=s.b, TA=splineTangent(pts,i), TB=splineTangent(pts,i+1);
+  var det=-TA.x*TB.y+TB.x*TA.y;
+  if(Math.abs(det)>1e-6){
+    var rx=B.x-A.x, ry=B.y-A.y;
+    var sv=(-rx*TB.y+TB.x*ry)/det;
+    var uv=(TA.x*ry-rx*TA.y)/det;
+    if(sv>=0.08&&sv<=1.6&&uv<=-0.08&&uv>=-1.6){
+      return pt(Math.round(A.x+sv*TA.x), Math.round(A.y+sv*TA.y));
+    }
+  }
+  return pt(Math.round((3*(s.c1.x+s.c2.x)-A.x-B.x)/4), Math.round((3*(s.c1.y+s.c2.y)-A.y-B.y)/4));
+}
+function targetPts(){ return targetRaw().map(function(p){return pt(p[0],p[1]);}); }
+function isControl(i){ return mode==="quad" && i%2===1; }
+
+/* --- スプライン：置いた点を全部通る曲線（3次ベジェのつながり） ---
+   各点の進む向き（接線）は、前後2つずつの点から決める。
+   そのため、点を置くと「2つ前の点で終わる区間」まで形が変わり、
+   それより前の区間は変わらない。 */
+function splineSegments(pts){
+  var segs=[];
+  if(pts.length<2)return segs;
+  var n=pts.length;
+  function tangentAt(j){
+    var a=pts[Math.max(0,j-2)], b=pts[Math.max(0,j-1)], c=pts[Math.min(n-1,j+1)], d=pts[Math.min(n-1,j+2)];
+    return { x:(a.x-8*b.x+8*c.x-d.x)/12, y:(a.y-8*b.y+8*c.y-d.y)/12 };
+  }
+  for(var i=0;i<n-1;i++){
+    var p1=pts[i], p2=pts[i+1], t1=tangentAt(i), t2=tangentAt(i+1);
+    segs.push({ a:p1, b:p2,
+      c1:pt(p1.x+t1.x/3, p1.y+t1.y/3),
+      c2:pt(p2.x-t2.x/3, p2.y-t2.y/3) });
+  }
+  return segs;
+}
+function splinePath(pts){
+  var segs=splineSegments(pts);
+  if(segs.length===0)return pts.length===1?("M "+pts[0].x+" "+pts[0].y):"";
+  var d="M "+segs[0].a.x+" "+segs[0].a.y;
+  segs.forEach(function(s){ d+=" C "+round1(s.c1.x)+" "+round1(s.c1.y)+", "+round1(s.c2.x)+" "+round1(s.c2.y)+", "+s.b.x+" "+s.b.y; });
+  return d;
+}
+function splineSample(pts,perSeg){
+  var segs=splineSegments(pts), out=[];
+  segs.forEach(function(s){
+    for(var i=0;i<perSeg;i++){
+      var t=i/perSeg, u=1-t;
+      out.push({ x:u*u*u*s.a.x+3*u*u*t*s.c1.x+3*u*t*t*s.c2.x+t*t*t*s.b.x,
+                 y:u*u*u*s.a.y+3*u*u*t*s.c1.y+3*u*t*t*s.c2.y+t*t*t*s.b.y });
+    }
+  });
+  if(segs.length)out.push({x:segs[segs.length-1].b.x, y:segs[segs.length-1].b.y});
+  return out;
+}
+
+/* --- 2次ベジェ：通る点→コントロール点→通る点 の繰り返し --- */
+function quadSegments(pts){
+  var segs=[];
+  for(var i=0;i+2<=pts.length-1;i+=2){ segs.push({a:pts[i], c:pts[i+1], b:pts[i+2]}); }
+  return segs;
+}
+function quadPath(pts){
+  var segs=quadSegments(pts);
+  if(segs.length===0)return pts.length>=1?("M "+pts[0].x+" "+pts[0].y):"";
+  var d="M "+segs[0].a.x+" "+segs[0].a.y;
+  segs.forEach(function(s){ d+=" Q "+s.c.x+" "+s.c.y+", "+s.b.x+" "+s.b.y; });
+  return d;
+}
+function quadSample(pts,perSeg){
+  var segs=quadSegments(pts), out=[];
+  segs.forEach(function(s){
+    for(var i=0;i<perSeg;i++){
+      var t=i/perSeg, u=1-t;
+      out.push({ x:u*u*s.a.x+2*u*t*s.c.x+t*t*s.b.x, y:u*u*s.a.y+2*u*t*s.c.y+t*t*s.b.y });
+    }
+  });
+  if(segs.length)out.push({x:segs[segs.length-1].b.x, y:segs[segs.length-1].b.y});
+  return out;
+}
+
+function pathFor(pts){ return mode==="spline" ? splinePath(pts) : quadPath(pts); }
+function sampleFor(pts,perSeg){ return mode==="spline" ? splineSample(pts,perSeg) : quadSample(pts,perSeg); }
+
+function meanMinDist(from,to){
+  var sum=0;
+  for(var i=0;i<from.length;i++){
+    var best=Infinity;
+    for(var j=0;j<to.length;j++){
+      var dx=from[i].x-to[j].x, dy=from[i].y-to[j].y, d=dx*dx+dy*dy;
+      if(d<best)best=d;
+    }
+    sum+=Math.sqrt(best);
+  }
+  return from.length?sum/from.length:Infinity;
+}
+function gradeScore(){
+  var target=sampleFor(targetPts(),50);
+  var mine=sampleFor(playerPts,50);
+  if(mine.length<2)return null;
+  var avg=(meanMinDist(target,mine)+meanMinDist(mine,target))/2;
+  var score=Math.max(0,Math.min(100,Math.round(100-avg*1.15)));
+  return {score:score, avg:avg};
+}
+function commentFor(score){
+  if(score>=90)return "お題にぴったり重なりました。点の置き方がばっちりです。";
+  if(score>=75)return "よくトレスできています。ずれている所の点を少し動かしたり、点を足したりすると、もっと近づきます。";
+  if(score>=55)return "形の流れはつかめています。お題から離れている所に点が足りないかもしれません。「お手本の点を見る」で比べてみてください。";
+  if(score>=30)return "まずは「お手本の点を見る」をONにして、同じ場所に点を置いてみてください。";
+  return "点が少ないか、お題の終わりまで届いていないようです。お手本の点を見ながら、左から右まで順に点を置いてみてください。";
+}
+function diamond(x,y,r){
+  return "M "+x+" "+(y-r)+" L "+(x+r)+" "+y+" L "+x+" "+(y+r)+" L "+(x-r)+" "+y+" Z";
+}
+
+function render(){
+  $("targetPath").setAttribute("d", pathFor(targetPts()));
+  var tg=targetRaw(), gg="";
+  if(showGuide){
+    tg.forEach(function(p,i){
+      if(isControl(i)){
+        gg+='<path d="'+diamond(p[0],p[1],8)+'" fill="#ffebee" stroke="#e57373" stroke-width="2"/>';
+      }else{
+        gg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="7" fill="#ffebee" stroke="#e57373" stroke-width="2"/>';
+      }
+      gg+='<text x="'+(p[0]+11)+'" y="'+(p[1]-9)+'" font-size="13" font-weight="700" fill="#e57373" pointer-events="none">'+(i+1)+'</text>';
+    });
+  }
+  $("targetGuides").innerHTML=gg;
+  $("playerPath").setAttribute("d", pathFor(playerPts));
+  var anchors="";
+  playerPts.forEach(function(p,i){
+    if(isControl(i)){
+      anchors+='<path d="'+diamond(p.x,p.y,12)+'" fill="'+(i===selected?"#ffe082":"#ffb52e")+'" stroke="#8a5a12" stroke-width="2.5" data-kind="anchor" data-idx="'+i+'"/>';
+    }else{
+      anchors+='<circle cx="'+p.x+'" cy="'+p.y+'" r="12" fill="'+(i===selected?"#ffe082":"#ffffff")+'" stroke="#263238" stroke-width="3" data-kind="anchor" data-idx="'+i+'"/>';
+    }
+    anchors+='<text x="'+p.x+'" y="'+p.y+'" font-size="10" font-weight="700" fill="#263238" text-anchor="middle" dy=".35em" pointer-events="none">'+(i+1)+'</text>';
+  });
+  $("anchorDots").innerHTML=anchors;
+  $("btnUndo").disabled=(undoStack.length===0);
+  $("btnDelSel").disabled=(selected<0 || playerPts.length<=1);
+  $("btnGuide").classList.toggle("on", showGuide);
+  $("btnGuide").textContent=showGuide?"お手本の点を隠す":"お手本の点を見る";
+  $("btnModeSpline").classList.toggle("on", mode==="spline");
+  $("btnModeQuad").classList.toggle("on", mode==="quad");
+  $("legendCurve").textContent=(mode==="spline")?"置いた点を全部通ります":"白い丸を通り、ひし形に引っぱられます";
+  $("legendPts").textContent=(mode==="spline")?"● 白い丸 ＝ 点（数字は置いた順番）":"● 白い丸 ＝ 通る点　◆ オレンジのひし形 ＝ コントロール点（曲線は通りません）";
+}
+function pushUndo(){
+  undoStack.push(JSON.stringify(playerPts));
+  if(undoStack.length>50)undoStack.shift();
+}
+function markDirty(){
+  if(graded){
+    graded=false;
+    $("result").className="result";
+    scores[qIndex]=null;
+    updateHeader();
+  }
+  $("status").textContent="";
+}
+function updateHeader(){
+  $("qnum").textContent="第"+(qIndex+1)+"問 / "+TOTAL+"問";
+  var sum=0; scores.forEach(function(s){ if(typeof s==="number")sum+=s; });
+  $("totalScore").textContent="合計 "+sum+"点";
+  $("barFill").style.width=(qIndex/TOTAL*100)+"%";
+}
+function showBest(){
+  var b=null;
+  try{b=localStorage.getItem("bezier_trace_best");}catch(e){}
+  $("best").textContent=(b!==null&&b!=="")?("🏆 ベスト平均： "+b+"点"):"";
+}
+function resetAttempt(){
+  var t=targetRaw();
+  playerPts=[pt(t[0][0], t[0][1])];
+  selected=0;
+  undoStack=[];
+  dragInfo=null;
+  if(graded){ scores[qIndex]=null; }
+  graded=false;
+  $("result").className="result";
+  updateHeader();
+  render();
+}
+function loadQuestion(i){
+  qIndex=i;
+  var q=QUESTIONS[i];
+  showGuide=false;
+  $("qtitle").textContent="お題"+(i+1)+"："+q.name;
+  $("qhint").textContent=(mode==="spline")?q.hintS:q.hintQ;
+  $("status").textContent="";
+  $("final").classList.remove("show");
+  $("playArea").style.display="";
+  resetAttempt();
+}
+function switchMode(newMode){
+  if(newMode===mode)return;
+  mode=newMode;
+  try{ localStorage.setItem("bezier_trace_mode", mode); }catch(e){}
+  var q=QUESTIONS[qIndex];
+  $("qhint").textContent=(mode==="spline")?q.hintS:q.hintQ;
+  resetAttempt();
+  $("status").textContent="曲線の種類を「"+(mode==="spline"?"スプライン":"2次ベジェ")+"」に変えました。この問題は最初からです。";
+}
+
+function toSvg(evt){
+  var svg=$("stage");
+  var r=svg.getBoundingClientRect();
+  return { x:Math.round((evt.clientX-r.left)/r.width*720), y:Math.round((evt.clientY-r.top)/r.height*440) };
+}
+function clampPt(p){
+  p.x=Math.max(4,Math.min(716,p.x));
+  p.y=Math.max(4,Math.min(436,p.y));
+  return p;
+}
+
+var stage=$("stage");
+stage.addEventListener("pointerdown", function(evt){
+  evt.preventDefault();
+  var p=clampPt(toSvg(evt));
+  var t=evt.target;
+  var kind=t && t.getAttribute ? t.getAttribute("data-kind") : null;
+  try{ stage.setPointerCapture(evt.pointerId); }catch(e){}
+  markDirty();
+  if(kind==="anchor"){
+    var idx=parseInt(t.getAttribute("data-idx"),10);
+    selected=idx;
+    pushUndo();
+    dragInfo={type:"anchor", idx:idx, dx:playerPts[idx].x-p.x, dy:playerPts[idx].y-p.y, moved:false};
+  }else{
+    pushUndo();
+    playerPts.push(pt(p.x,p.y));
+    selected=playerPts.length-1;
+    dragInfo={type:"place", idx:selected, moved:false};
+  }
+  render();
+});
+stage.addEventListener("pointermove", function(evt){
+  if(!dragInfo)return;
+  var p=clampPt(toSvg(evt));
+  var n=playerPts[dragInfo.idx];
+  if(!n){dragInfo=null;return;}
+  dragInfo.moved=true;
+  if(dragInfo.type==="anchor"){ n.x=p.x+dragInfo.dx; n.y=p.y+dragInfo.dy; }
+  else{ n.x=p.x; n.y=p.y; }
+  render();
+});
+function endDrag(){
+  if(dragInfo && !dragInfo.moved && dragInfo.type==="anchor"){
+    undoStack.pop();
+  }
+  dragInfo=null;
+  render();
+}
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+
+$("btnModeSpline").addEventListener("click", function(){ switchMode("spline"); });
+$("btnModeQuad").addEventListener("click", function(){ switchMode("quad"); });
+$("btnUndo").addEventListener("click", function(){
+  if(undoStack.length===0)return;
+  playerPts=JSON.parse(undoStack.pop()).map(function(o){return pt(o.x,o.y);});
+  if(selected>=playerPts.length)selected=playerPts.length-1;
+  markDirty();
+  render();
+});
+$("btnDelSel").addEventListener("click", function(){
+  if(selected<0||playerPts.length<=1)return;
+  pushUndo();
+  playerPts.splice(selected,1);
+  selected=Math.min(selected, playerPts.length-1);
+  markDirty();
+  render();
+});
+$("btnClear").addEventListener("click", function(){
+  pushUndo();
+  var t=targetRaw();
+  playerPts=[pt(t[0][0], t[0][1])];
+  selected=0;
+  markDirty();
+  render();
+});
+$("btnGuide").addEventListener("click", function(){
+  showGuide=!showGuide;
+  render();
+});
+$("btnGrade").addEventListener("click", function(){
+  var need=(mode==="spline")?2:3;
+  if(playerPts.length<need){
+    $("status").textContent=(mode==="spline")
+      ? "点をあと1つ以上置いて、曲線を描いてください。"
+      : "2次ベジェは、点が3つ（通る点・コントロール点・通る点）必要です。あと点を置いてください。";
+    return;
+  }
+  var g=gradeScore();
+  if(!g){
+    $("status").textContent="まだ曲線ができていません。点を置いてください。";
+    return;
+  }
+  graded=true;
+  scores[qIndex]=g.score;
+  var box=$("result");
+  box.className="result show "+(g.score>=75?"good":(g.score>=45?"mid":"low"));
+  $("scoreNum").textContent=g.score+"点";
+  $("verdict").textContent=g.score>=90?"◎ ぴったり！":(g.score>=75?"◎ よくなぞれました":(g.score>=55?"○ あと少し":"△ 点の置き方を工夫しよう"));
+  $("comment").textContent=commentFor(g.score);
+  $("distInfo").textContent="お題との平均のずれ： 約"+Math.round(g.avg)+"px（小さいほどぴったり）／種類： "+(mode==="spline"?"スプライン":"2次ベジェ");
+  $("btnNext").textContent=(qIndex===TOTAL-1)?"結果を見る ▶":"次の問題へ ▶";
+  $("barFill").style.width=((qIndex+1)/TOTAL*100)+"%";
+  updateHeader();
+});
+$("btnNext").addEventListener("click", function(){
+  if(qIndex<TOTAL-1){ loadQuestion(qIndex+1); try{window.scrollTo({top:0,behavior:"smooth"});}catch(e){} }
+  else{ showFinal(); }
+});
+$("btnRestart").addEventListener("click", function(){
+  scores=[];
+  loadQuestion(0);
+  try{window.scrollTo({top:0,behavior:"smooth"});}catch(e){}
+});
+function rankFor(avg){
+  if(avg>=90)return{rank:"トレス名人！",msg:"点の置き方がばっちりです。置いた点と曲線の流れを、しっかり読めています。"};
+  if(avg>=75)return{rank:"かなり上手",msg:"よくトレスできました。あとは、ずれる所に点を足したり、点を少し動かしたりするだけです。"};
+  if(avg>=55)return{rank:"練習中",msg:"種類を変えて同じお題を描き比べるのも勉強になります。お手本の点を見ながら、もう一度挑戦してみてください。"};
+  return{rank:"これから覚えよう",msg:"まずは「お手本の点を見る」をONにして、同じ場所に点を置く練習から始めてみてください。"};
+}
+function showFinal(){
+  $("playArea").style.display="none";
+  var sum=scores.reduce(function(a,s){return a+(typeof s==="number"?s:0);},0);
+  var avg=Math.round(sum/TOTAL);
+  $("final").classList.add("show");
+  $("finalScore").textContent="平均 "+avg+"点（合計 "+sum+"点）";
+  var r=rankFor(avg);
+  $("finalRank").textContent=r.rank;
+  $("finalMsg").textContent=r.msg;
+  try{
+    var prev=localStorage.getItem("bezier_trace_best");
+    if(prev===null||avg>parseInt(prev,10))localStorage.setItem("bezier_trace_best",String(avg));
+  }catch(e){}
+  var list=$("reviewList"); list.innerHTML="";
+  QUESTIONS.forEach(function(q,i){
+    var d=document.createElement("div"); d.className="review-item";
+    d.textContent="お題"+(i+1)+"「"+q.name+"」： "+(typeof scores[i]==="number"?scores[i]+"点":"未採点");
+    list.appendChild(d);
+  });
+  showBest();
+  try{window.scrollTo({top:0,behavior:"smooth"});}catch(e){}
+}
+
+showBest();
+loadQuestion(0);
+})();
+</script>
+</body>
+</html>
