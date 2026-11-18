@@ -129,7 +129,7 @@ h1{font-size:23px;margin:2px 0 4px;letter-spacing:.02em}
 <ul>
 <li><b>種類の選び方</b>：上の「スプライン」「2次ベジェ」ボタンで切り替えます（選んだ種類は保存されます）。切り替えると、その問題は最初からやり直しになります。</li>
 <li><b>スプライン</b>：タップで置いた点を全部通る、なめらかな曲線です。角度の編集はありません。点を置くと、<b>2つ前の点までの形が変わります</b>（それより前の部分は変わりません）。急に曲がるところでは点の間隔を狭く、山の頂点と谷の底には必ず点を置いてください。</li>
-<li><b>2次ベジェ</b>：お題はスプラインとまったく同じ曲線です。点が交互に「通る点（白い丸）」と「コントロール点（オレンジのひし形）」になります。白い丸はスプラインとまったく同じ場所で、ひし形はそのあいだに入ります。曲線は白い丸を通り、ひし形の方向に引っぱられます（ひし形自体は通りません）。ひし形を遠くに置くほど、強く引っぱられます。</li>
+<li><b>2次ベジェ</b>：お題はスプラインとまったく同じ曲線です。置くのは「通る点（白い丸）」だけで、「コントロール点（オレンジのひし形）」は白い丸と白い丸のあいだに自動で置かれます。点を置くと、前の点とのあいだに線が引かれます。曲線は白い丸を通り、ひし形の方向に引っぱられます（ひし形自体は通りません）。白い丸をドラッグで動かすと、ひし形も自動でついてきます。</li>
 <li><b>直す</b>：どちらの種類でも、点はドラッグで移動できます。点をタップして選んで「選んだ点を消す」こともできます。</li>
 <li><b>採点</b>：お題の曲線とあなたの曲線の「平均のずれ」で採点します。最後の点がお題の終わりまで届いていないと、点数が下がります。</li>
 <li>「お手本の点を見る」を押すと、お題の点の位置と順番が薄く表示されます。最初はそれを見ながら練習するのがおすすめです。</li>
@@ -148,23 +148,23 @@ function round1(v){return Math.round(v*10)/10;}
 var QUESTIONS=[
  {name:"なだらかな丘",
   hintS:"山の頂点に必ず点を置いてください。登りと下りの途中にも点を置くと、なだらかな山になります。",
-  hintQ:"白い丸（通る点）はスプラインとまったく同じ場所です。ひし形（コントロール点）は、白い丸と白い丸のあいだに置きます。ひし形の方向に曲線が引っぱられます。",
+  hintQ:"白い丸（通る点）はスプラインとまったく同じ場所に置いてください。ひし形（コントロール点）は自動で置かれて、曲線がその方向に引っぱられます。",
   pointsS:[[70,340],[200,210],[360,105],[520,210],[650,340]]},
  {name:"S字カーブ",
   hintS:"下がってから上がる、曲がる向きが切り替わる真ん中あたりに点を置くのが大事です。",
-  hintQ:"白い丸はスプラインとまったく同じ場所で、真ん中の白い丸が谷の底です。ひし形は、白い丸と白い丸のあいだに置いてください。",
+  hintQ:"白い丸はスプラインとまったく同じ場所で、真ん中の白い丸が谷の底です。ひし形は自動で置かれます。",
   pointsS:[[70,140],[190,150],[290,260],[360,295],[430,260],[530,155],[650,150]]},
  {name:"波なみ",
   hintS:"山と谷、1つずつに点を置くのがコツです。山・谷・山・谷と順に置いていってください。",
-  hintQ:"白い丸はスプラインとまったく同じ、山と谷の場所です。ひし形は、そのあいだに1つずつ置きます。",
+  hintQ:"白い丸はスプラインとまったく同じ、山と谷の場所に置いてください。ひし形は自動で置かれます。",
   pointsS:[[50,270],[120,180],[185,170],[255,260],[320,330],[390,260],[455,170],[525,180],[600,255],[670,270]]},
  {name:"ジェットコースター",
   hintS:"急な下りでは点の間隔を狭くすると、お題に沿いやすくなります。いちばん下の底にも点を置いてください。",
-  hintQ:"白い丸はスプラインとまったく同じ場所です。急な下りの区間は、前後のひし形の置き方で曲がり具合が変わります。",
+  hintQ:"白い丸はスプラインとまったく同じ場所に置いてください。ひし形は自動で置かれます。",
   pointsS:[[60,115],[180,125],[255,250],[300,365],[370,370],[445,260],[475,175],[560,175],[660,330]]},
  {name:"山ふたつ",
   hintS:"2つの山の頂点と、あいだの谷に点を置いてください。急に曲がるところは間隔を狭く。",
-  hintQ:"白い丸はスプラインとまったく同じ場所です。ひし形は白い丸のあいだに置いて、山のふくらみを作ります。",
+  hintQ:"白い丸はスプラインとまったく同じ場所に置いてください。ひし形は自動で置かれます。",
   pointsS:[[60,350],[140,240],[225,145],[300,250],[360,340],[450,250],[540,155],[660,330]]}
 ];
 var TOTAL=QUESTIONS.length;
@@ -183,14 +183,14 @@ var dragInfo=null;
 function targetRaw(){
   var raw=QUESTIONS[qIndex].pointsS;
   if(mode==="spline")return raw;
-  return quadTargetPts(raw.map(function(p){return pt(p[0],p[1]);})).map(function(p){return [p.x,p.y];});
+  return deriveQuadPts(raw.map(function(p){return pt(p[0],p[1]);})).map(function(p){return [p.x,p.y];});
 }
-/* 2次ベジェのお題は、スプラインのお題から自動で作る（同じ曲線・同じ通る点）。
-   通る点はスプラインとまったく同じで、区間ごとにコントロール点を計算してはさむ。
+/* 2次ベジェの点の並びは、通る点（白い丸）の並びから自動で作る（お題にも自分の線にも使う）。
+   通る点のあいだに、区間ごとにコントロール点を計算してはさむ。
    コントロール点は「区間の両端の接線の交点」に置くのが基本：つなぎ目で曲線の
    向きがそろうので、線がガタつかず滑らかになる。交点が遠くになりすぎる区間は、
    「中点がスプラインと重なる点」に切り替える */
-function quadTargetPts(pts){
+function deriveQuadPts(pts){
   var segs=splineSegments(pts);
   var out=[pts[0]];
   segs.forEach(function(s,i){
@@ -301,9 +301,13 @@ function meanMinDist(from,to){
   }
   return from.length?sum/from.length:Infinity;
 }
+/* 自分の線の点の並び：2次ベジェでは、置いた通る点からコントロール点を自動で作る */
+function playerFullPts(){
+  return mode==="quad" ? deriveQuadPts(playerPts) : playerPts;
+}
 function gradeScore(){
   var target=sampleFor(targetPts(),50);
-  var mine=sampleFor(playerPts,50);
+  var mine=sampleFor(playerFullPts(),50);
   if(mine.length<2)return null;
   var avg=(meanMinDist(target,mine)+meanMinDist(mine,target))/2;
   var score=Math.max(0,Math.min(100,Math.round(100-avg*1.15)));
@@ -324,24 +328,30 @@ function render(){
   $("targetPath").setAttribute("d", pathFor(targetPts()));
   var tg=targetRaw(), gg="";
   if(showGuide){
+    var anchorNo=0;
     tg.forEach(function(p,i){
       if(isControl(i)){
         gg+='<path d="'+diamond(p[0],p[1],8)+'" fill="#ffebee" stroke="#e57373" stroke-width="2"/>';
       }else{
+        anchorNo++;
         gg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="7" fill="#ffebee" stroke="#e57373" stroke-width="2"/>';
+        gg+='<text x="'+(p[0]+11)+'" y="'+(p[1]-9)+'" font-size="13" font-weight="700" fill="#e57373" pointer-events="none">'+anchorNo+'</text>';
       }
-      gg+='<text x="'+(p[0]+11)+'" y="'+(p[1]-9)+'" font-size="13" font-weight="700" fill="#e57373" pointer-events="none">'+(i+1)+'</text>';
     });
   }
   $("targetGuides").innerHTML=gg;
-  $("playerPath").setAttribute("d", pathFor(playerPts));
+  $("playerPath").setAttribute("d", pathFor(playerFullPts()));
   var anchors="";
+  if(mode==="quad"){
+    /* コントロール点（ひし形）は自動で置かれる表示専用。タップは下の面に通す */
+    deriveQuadPts(playerPts).forEach(function(p,i){
+      if(i%2===1){
+        anchors+='<path d="'+diamond(p.x,p.y,10)+'" fill="#ffb52e" fill-opacity="0.55" stroke="#8a5a12" stroke-width="2" pointer-events="none"/>';
+      }
+    });
+  }
   playerPts.forEach(function(p,i){
-    if(isControl(i)){
-      anchors+='<path d="'+diamond(p.x,p.y,12)+'" fill="'+(i===selected?"#ffe082":"#ffb52e")+'" stroke="#8a5a12" stroke-width="2.5" data-kind="anchor" data-idx="'+i+'"/>';
-    }else{
-      anchors+='<circle cx="'+p.x+'" cy="'+p.y+'" r="12" fill="'+(i===selected?"#ffe082":"#ffffff")+'" stroke="#263238" stroke-width="3" data-kind="anchor" data-idx="'+i+'"/>';
-    }
+    anchors+='<circle cx="'+p.x+'" cy="'+p.y+'" r="12" fill="'+(i===selected?"#ffe082":"#ffffff")+'" stroke="#263238" stroke-width="3" data-kind="anchor" data-idx="'+i+'"/>';
     anchors+='<text x="'+p.x+'" y="'+p.y+'" font-size="10" font-weight="700" fill="#263238" text-anchor="middle" dy=".35em" pointer-events="none">'+(i+1)+'</text>';
   });
   $("anchorDots").innerHTML=anchors;
@@ -352,7 +362,7 @@ function render(){
   $("btnModeSpline").classList.toggle("on", mode==="spline");
   $("btnModeQuad").classList.toggle("on", mode==="quad");
   $("legendCurve").textContent=(mode==="spline")?"置いた点を全部通ります":"白い丸を通り、ひし形に引っぱられます";
-  $("legendPts").textContent=(mode==="spline")?"● 白い丸 ＝ 点（数字は置いた順番）":"● 白い丸 ＝ 通る点　◆ オレンジのひし形 ＝ コントロール点（曲線は通りません）";
+  $("legendPts").textContent=(mode==="spline")?"● 白い丸 ＝ 点（数字は置いた順番）":"● 白い丸 ＝ 通る点（置くのはこの点だけ）　◆ オレンジのひし形 ＝ コントロール点（自動で置かれます／曲線は通りません）";
 }
 function pushUndo(){
   undoStack.push(JSON.stringify(playerPts));
@@ -493,11 +503,8 @@ $("btnGuide").addEventListener("click", function(){
   render();
 });
 $("btnGrade").addEventListener("click", function(){
-  var need=(mode==="spline")?2:3;
-  if(playerPts.length<need){
-    $("status").textContent=(mode==="spline")
-      ? "点をあと1つ以上置いて、曲線を描いてください。"
-      : "2次ベジェは、点が3つ（通る点・コントロール点・通る点）必要です。あと点を置いてください。";
+  if(playerPts.length<2){
+    $("status").textContent="点をあと1つ以上置いて、曲線を描いてください。";
     return;
   }
   var g=gradeScore();
