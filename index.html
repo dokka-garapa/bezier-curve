@@ -129,7 +129,7 @@ h1{font-size:23px;margin:2px 0 4px;letter-spacing:.02em}
 <ul>
 <li><b>種類の選び方</b>：上の「スプライン」「2次ベジェ」ボタンで切り替えます（選んだ種類は保存されます）。切り替えると、その問題は最初からやり直しになります。</li>
 <li><b>スプライン</b>：タップで置いた点を全部通る、なめらかな曲線です。角度の編集はありません。点を置くと、<b>2つ前の点までの形が変わります</b>（それより前の部分は変わりません）。急に曲がるところでは点の間隔を狭く、山の頂点と谷の底には必ず点を置いてください。</li>
-<li><b>2次ベジェ</b>：お題はスプラインとまったく同じ曲線です。置くのは「通る点（白い丸）」だけで、「コントロール点（オレンジのひし形）」は白い丸と白い丸のあいだに自動で置かれます。点を置くと、前の点とのあいだに線が引かれます。曲線は白い丸を通り、ひし形の方向に引っぱられます（ひし形自体は通りません）。白い丸をドラッグで動かすと、ひし形も自動でついてきます。</li>
+<li><b>2次ベジェ</b>：クリスタの「連続曲線」と同じ方式です。お題はスプラインとほぼ同じ曲線です。1つ目の点が始点、置いた最後の点が終点（どちらも白い丸）で、そのあいだの点は全部「方向点（オレンジのひし形）」になります。線は方向点を通らず、となり合う方向点の真ん中（小さい灰色の点）を通ります。方向点に輪ゴムで引っぱられるイメージです。点を置くたびに、1つ前の点が方向点に変わります。点は後からドラッグで動かせます。</li>
 <li><b>直す</b>：どちらの種類でも、点はドラッグで移動できます。点をタップして選んで「選んだ点を消す」こともできます。</li>
 <li><b>採点</b>：お題の曲線とあなたの曲線の「平均のずれ」で採点します。最後の点がお題の終わりまで届いていないと、点数が下がります。</li>
 <li>「お手本の点を見る」を押すと、お題の点の位置と順番が薄く表示されます。最初はそれを見ながら練習するのがおすすめです。</li>
@@ -144,27 +144,27 @@ function $(id){return document.getElementById(id);}
 function pt(x,y){return {x:x,y:y};}
 function round1(v){return Math.round(v*10)/10;}
 
-/* お題：スプラインの「点の並び」だけを持つ。2次ベジェのお題は同じ並びから自動で作る（同じ曲線・同じ通る点） */
+/* お題：スプラインの「点の並び」だけを持つ。2次ベジェのお題は、クリスタの連続曲線方式で置く点の並びを、同じ並びから自動で作る（曲線はほぼ同じ） */
 var QUESTIONS=[
  {name:"なだらかな丘",
   hintS:"山の頂点に必ず点を置いてください。登りと下りの途中にも点を置くと、なだらかな山になります。",
-  hintQ:"白い丸（通る点）はスプラインとまったく同じ場所に置いてください。ひし形（コントロール点）は自動で置かれて、曲線がその方向に引っぱられます。",
+  hintQ:"方向点（ひし形）は、線を引っぱりたい方向に置きます。線は方向点の真ん中を通るので、「お手本の点を見る」で置く場所と順番を確認するのがおすすめです。",
   pointsS:[[70,340],[200,210],[360,105],[520,210],[650,340]]},
  {name:"S字カーブ",
   hintS:"下がってから上がる、曲がる向きが切り替わる真ん中あたりに点を置くのが大事です。",
-  hintQ:"白い丸はスプラインとまったく同じ場所で、真ん中の白い丸が谷の底です。ひし形は自動で置かれます。",
+  hintQ:"線は方向点の真ん中を通ります。谷の底のあたりは、方向点を谷より下に置くと深くなります。お手本の点を見るのがおすすめです。",
   pointsS:[[70,140],[190,150],[290,260],[360,295],[430,260],[530,155],[650,150]]},
  {name:"波なみ",
   hintS:"山と谷、1つずつに点を置くのがコツです。山・谷・山・谷と順に置いていってください。",
-  hintQ:"白い丸はスプラインとまったく同じ、山と谷の場所に置いてください。ひし形は自動で置かれます。",
+  hintQ:"波は、方向点を山の上・谷の下に交互に置いていくと作れます。線は方向点の真ん中を通ります。",
   pointsS:[[50,270],[120,180],[185,170],[255,260],[320,330],[390,260],[455,170],[525,180],[600,255],[670,270]]},
  {name:"ジェットコースター",
   hintS:"急な下りでは点の間隔を狭くすると、お題に沿いやすくなります。いちばん下の底にも点を置いてください。",
-  hintQ:"白い丸はスプラインとまったく同じ場所に置いてください。ひし形は自動で置かれます。",
+  hintQ:"急な下りは、方向点を進む方向に置くと作れます。線は方向点の真ん中を通るので、お手本の点で確認してみてください。",
   pointsS:[[60,115],[180,125],[255,250],[300,365],[370,370],[445,260],[475,175],[560,175],[660,330]]},
  {name:"山ふたつ",
   hintS:"2つの山の頂点と、あいだの谷に点を置いてください。急に曲がるところは間隔を狭く。",
-  hintQ:"白い丸はスプラインとまったく同じ場所に置いてください。ひし形は自動で置かれます。",
+  hintQ:"山のふくらみは、方向点を山の上に置いて作ります。線は方向点の真ん中を通ります。お手本の点を見るのがおすすめです。",
   pointsS:[[60,350],[140,240],[225,145],[300,250],[360,340],[450,250],[540,155],[660,330]]}
 ];
 var TOTAL=QUESTIONS.length;
@@ -183,43 +183,54 @@ var dragInfo=null;
 function targetRaw(){
   var raw=QUESTIONS[qIndex].pointsS;
   if(mode==="spline")return raw;
-  return deriveQuadPts(raw.map(function(p){return pt(p[0],p[1]);})).map(function(p){return [p.x,p.y];});
+  return deriveCspPts(raw.map(function(p){return pt(p[0],p[1]);})).map(function(p){return [p.x,p.y];});
 }
-/* 2次ベジェの点の並びは、通る点（白い丸）の並びから自動で作る（お題にも自分の線にも使う）。
-   通る点のあいだに、区間ごとにコントロール点を計算してはさむ。
-   コントロール点は「区間の両端の接線の交点」に置くのが基本：つなぎ目で曲線の
-   向きがそろうので、線がガタつかず滑らかになる。交点が遠くになりすぎる区間は、
-   「中点がスプラインと重なる点」に切り替える */
-function deriveQuadPts(pts){
-  var segs=splineSegments(pts);
-  var out=[pts[0]];
-  segs.forEach(function(s,i){
-    out.push(quadControl(pts,i,s));
-    out.push(s.b);
+/* 2次ベジェのお題の点の並び（クリスタの連続曲線方式で置く点）は、スプラインの
+   点の並びから自動で作る。スプラインの各区間を半分に分け、その真ん中も「線が
+   通る点（結び目）」にすると、連続曲線の線がスプラインにほぼ重なる。
+   置く点は「結び目同士の真ん中」という決まりでつながっているので、最初の
+   方向点1つを決めれば残りは全部決まる。その1つは、各区間の理想の方向点に
+   いちばん近づくよう最小二乗で選ぶ */
+function splitCubic(s){
+  function lerp(p,q){ return { x:(p.x+q.x)/2, y:(p.y+q.y)/2 }; }
+  var p01=lerp(s.a,s.c1), p12=lerp(s.c1,s.c2), p23=lerp(s.c2,s.b);
+  var p012=lerp(p01,p12), p123=lerp(p12,p23), m=lerp(p012,p123);
+  return [ {a:s.a,c1:p01,c2:p012,b:m}, {a:m,c1:p123,c2:p23,b:s.b} ];
+}
+function midControlOfCubic(s){
+  return { x:(3*(s.c1.x+s.c2.x)-s.a.x-s.b.x)/4, y:(3*(s.c1.y+s.c2.y)-s.a.y-s.b.y)/4 };
+}
+function deriveCspPts(anchors){
+  var knots=[anchors[0]], ideals=[];
+  splineSegments(anchors).forEach(function(s){
+    splitCubic(s).forEach(function(h){
+      ideals.push(midControlOfCubic(h));
+      knots.push(h.b);
+    });
   });
-  return out;
-}
-/* スプラインと同じ接線（前後2つずつの点から決める）を、任意の点リストで計算する */
-function splineTangent(pts,j){
-  var n=pts.length;
-  var a=pts[Math.max(0,j-2)], b=pts[Math.max(0,j-1)], c=pts[Math.min(n-1,j+1)], d=pts[Math.min(n-1,j+2)];
-  return { x:(a.x-8*b.x+8*c.x-d.x)/12, y:(a.y-8*b.y+8*c.y-d.y)/12 };
-}
-function quadControl(pts,i,s){
-  var A=s.a, B=s.b, TA=splineTangent(pts,i), TB=splineTangent(pts,i+1);
-  var det=-TA.x*TB.y+TB.x*TA.y;
-  if(Math.abs(det)>1e-6){
-    var rx=B.x-A.x, ry=B.y-A.y;
-    var sv=(-rx*TB.y+TB.x*ry)/det;
-    var uv=(TA.x*ry-rx*TA.y)/det;
-    if(sv>=0.08&&sv<=1.6&&uv<=-0.08&&uv>=-1.6){
-      return pt(Math.round(A.x+sv*TA.x), Math.round(A.y+sv*TA.y));
-    }
+  var n=ideals.length;
+  var ss=[null], cc=[null];
+  ss[1]=1; cc[1]={x:0,y:0};
+  for(var j=1;j<n;j++){
+    ss[j+1]=-ss[j];
+    cc[j+1]={ x:2*knots[j].x-cc[j].x, y:2*knots[j].y-cc[j].y };
   }
-  return pt(Math.round((3*(s.c1.x+s.c2.x)-A.x-B.x)/4), Math.round((3*(s.c1.y+s.c2.y)-A.y-B.y)/4));
+  var ax=0, ay=0;
+  for(var k=1;k<=n;k++){
+    ax+=ss[k]*(ideals[k-1].x-cc[k].x);
+    ay+=ss[k]*(ideals[k-1].y-cc[k].y);
+  }
+  var p1x=ax/n, p1y=ay/n;
+  var clicked=[pt(Math.round(knots[0].x), Math.round(knots[0].y))];
+  for(var m=1;m<=n;m++){
+    clicked.push(pt(Math.round(ss[m]*p1x+cc[m].x), Math.round(ss[m]*p1y+cc[m].y)));
+  }
+  clicked.push(pt(Math.round(knots[n].x), Math.round(knots[n].y)));
+  return clicked;
 }
 function targetPts(){ return targetRaw().map(function(p){return pt(p[0],p[1]);}); }
-function isControl(i){ return mode==="quad" && i%2===1; }
+/* 2次ベジェで「方向点」になる点：最初と最後は線が通る点、それ以外は全部 方向点 */
+function isDirPoint(i,len){ return mode==="quad" && i>0 && i<len-1; }
 
 /* --- スプライン：置いた点を全部通る曲線（3次ベジェのつながり） ---
    各点の進む向き（接線）は、前後2つずつの点から決める。
@@ -261,21 +272,37 @@ function splineSample(pts,perSeg){
   return out;
 }
 
-/* --- 2次ベジェ：通る点→コントロール点→通る点 の繰り返し --- */
-function quadSegments(pts){
-  var segs=[];
-  for(var i=0;i+2<=pts.length-1;i+=2){ segs.push({a:pts[i], c:pts[i+1], b:pts[i+2]}); }
+/* --- 2次ベジェ：クリスタの「連続曲線」と同じ方式 ---
+   置いた点のうち、最初と最後は線が通る点。あいだの点は全部「方向点」で、
+   線は方向点を通らず、となり合う方向点の真ん中（結び目）を通る。
+   結び目では前後の区間の向きが自然にそろうので、線は滑らかにつながる。
+   点が2つだけのときは直線になる */
+function cspSegments(pts){
+  var L=pts.length, segs=[];
+  if(L<2)return segs;
+  if(L===2){
+    segs.push({ a:pts[0], c:{ x:(pts[0].x+pts[1].x)/2, y:(pts[0].y+pts[1].y)/2 }, b:pts[1] });
+    return segs;
+  }
+  var knots=[pts[0]];
+  for(var i=1;i<=L-3;i++){
+    knots.push({ x:(pts[i].x+pts[i+1].x)/2, y:(pts[i].y+pts[i+1].y)/2 });
+  }
+  knots.push(pts[L-1]);
+  for(var j=1;j<=L-2;j++){
+    segs.push({ a:knots[j-1], c:pts[j], b:knots[j] });
+  }
   return segs;
 }
-function quadPath(pts){
-  var segs=quadSegments(pts);
+function cspPath(pts){
+  var segs=cspSegments(pts);
   if(segs.length===0)return pts.length>=1?("M "+pts[0].x+" "+pts[0].y):"";
   var d="M "+segs[0].a.x+" "+segs[0].a.y;
-  segs.forEach(function(s){ d+=" Q "+s.c.x+" "+s.c.y+", "+s.b.x+" "+s.b.y; });
+  segs.forEach(function(s){ d+=" Q "+round1(s.c.x)+" "+round1(s.c.y)+", "+round1(s.b.x)+" "+round1(s.b.y); });
   return d;
 }
-function quadSample(pts,perSeg){
-  var segs=quadSegments(pts), out=[];
+function cspSample(pts,perSeg){
+  var segs=cspSegments(pts), out=[];
   segs.forEach(function(s){
     for(var i=0;i<perSeg;i++){
       var t=i/perSeg, u=1-t;
@@ -286,8 +313,8 @@ function quadSample(pts,perSeg){
   return out;
 }
 
-function pathFor(pts){ return mode==="spline" ? splinePath(pts) : quadPath(pts); }
-function sampleFor(pts,perSeg){ return mode==="spline" ? splineSample(pts,perSeg) : quadSample(pts,perSeg); }
+function pathFor(pts){ return mode==="spline" ? splinePath(pts) : cspPath(pts); }
+function sampleFor(pts,perSeg){ return mode==="spline" ? splineSample(pts,perSeg) : cspSample(pts,perSeg); }
 
 function meanMinDist(from,to){
   var sum=0;
@@ -301,13 +328,9 @@ function meanMinDist(from,to){
   }
   return from.length?sum/from.length:Infinity;
 }
-/* 自分の線の点の並び：2次ベジェでは、置いた通る点からコントロール点を自動で作る */
-function playerFullPts(){
-  return mode==="quad" ? deriveQuadPts(playerPts) : playerPts;
-}
 function gradeScore(){
   var target=sampleFor(targetPts(),50);
-  var mine=sampleFor(playerFullPts(),50);
+  var mine=sampleFor(playerPts,50);
   if(mine.length<2)return null;
   var avg=(meanMinDist(target,mine)+meanMinDist(mine,target))/2;
   var score=Math.max(0,Math.min(100,Math.round(100-avg*1.15)));
@@ -328,30 +351,31 @@ function render(){
   $("targetPath").setAttribute("d", pathFor(targetPts()));
   var tg=targetRaw(), gg="";
   if(showGuide){
-    var anchorNo=0;
     tg.forEach(function(p,i){
-      if(isControl(i)){
+      if(isDirPoint(i,tg.length)){
         gg+='<path d="'+diamond(p[0],p[1],8)+'" fill="#ffebee" stroke="#e57373" stroke-width="2"/>';
       }else{
-        anchorNo++;
         gg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="7" fill="#ffebee" stroke="#e57373" stroke-width="2"/>';
-        gg+='<text x="'+(p[0]+11)+'" y="'+(p[1]-9)+'" font-size="13" font-weight="700" fill="#e57373" pointer-events="none">'+anchorNo+'</text>';
       }
+      gg+='<text x="'+(p[0]+11)+'" y="'+(p[1]-9)+'" font-size="13" font-weight="700" fill="#e57373" pointer-events="none">'+(i+1)+'</text>';
     });
   }
   $("targetGuides").innerHTML=gg;
-  $("playerPath").setAttribute("d", pathFor(playerFullPts()));
+  $("playerPath").setAttribute("d", pathFor(playerPts));
   var anchors="";
   if(mode==="quad"){
-    /* コントロール点（ひし形）は自動で置かれる表示専用。タップは下の面に通す */
-    deriveQuadPts(playerPts).forEach(function(p,i){
-      if(i%2===1){
-        anchors+='<path d="'+diamond(p.x,p.y,10)+'" fill="#ffb52e" fill-opacity="0.55" stroke="#8a5a12" stroke-width="2" pointer-events="none"/>';
-      }
-    });
+    /* 線が通る「結び目」（となり合う方向点の真ん中）を小さい灰色の点で示す */
+    var psegs=cspSegments(playerPts);
+    for(var si=0;si<psegs.length-1;si++){
+      anchors+='<circle cx="'+round1(psegs[si].b.x)+'" cy="'+round1(psegs[si].b.y)+'" r="3.5" fill="#90a4ae" pointer-events="none"/>';
+    }
   }
   playerPts.forEach(function(p,i){
-    anchors+='<circle cx="'+p.x+'" cy="'+p.y+'" r="12" fill="'+(i===selected?"#ffe082":"#ffffff")+'" stroke="#263238" stroke-width="3" data-kind="anchor" data-idx="'+i+'"/>';
+    if(isDirPoint(i,playerPts.length)){
+      anchors+='<path d="'+diamond(p.x,p.y,12)+'" fill="'+(i===selected?"#ffe082":"#ffb52e")+'" stroke="#8a5a12" stroke-width="2.5" data-kind="anchor" data-idx="'+i+'"/>';
+    }else{
+      anchors+='<circle cx="'+p.x+'" cy="'+p.y+'" r="12" fill="'+(i===selected?"#ffe082":"#ffffff")+'" stroke="#263238" stroke-width="3" data-kind="anchor" data-idx="'+i+'"/>';
+    }
     anchors+='<text x="'+p.x+'" y="'+p.y+'" font-size="10" font-weight="700" fill="#263238" text-anchor="middle" dy=".35em" pointer-events="none">'+(i+1)+'</text>';
   });
   $("anchorDots").innerHTML=anchors;
@@ -361,8 +385,8 @@ function render(){
   $("btnGuide").textContent=showGuide?"お手本の点を隠す":"お手本の点を見る";
   $("btnModeSpline").classList.toggle("on", mode==="spline");
   $("btnModeQuad").classList.toggle("on", mode==="quad");
-  $("legendCurve").textContent=(mode==="spline")?"置いた点を全部通ります":"白い丸を通り、ひし形に引っぱられます";
-  $("legendPts").textContent=(mode==="spline")?"● 白い丸 ＝ 点（数字は置いた順番）":"● 白い丸 ＝ 通る点（置くのはこの点だけ）　◆ オレンジのひし形 ＝ コントロール点（自動で置かれます／曲線は通りません）";
+  $("legendCurve").textContent=(mode==="spline")?"置いた点を全部通ります":"方向点に引っぱられ、方向点の真ん中を通ります";
+  $("legendPts").textContent=(mode==="spline")?"● 白い丸 ＝ 点（数字は置いた順番）":"● 白い丸 ＝ 線が通る点（始点と、今の最後の点）　◆ オレンジのひし形 ＝ 方向点（線は通りません）　・ 小さい灰色の点 ＝ 線が通る真ん中の点";
 }
 function pushUndo(){
   undoStack.push(JSON.stringify(playerPts));
